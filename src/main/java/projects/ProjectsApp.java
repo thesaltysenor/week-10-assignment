@@ -72,7 +72,7 @@ public class ProjectsApp  {
     private void selectProject() {
         listProjects();
         Integer projectId = getIntInput("Enter a project ID to select a project");
-        
+
     }
 
     private void listProjects() {
