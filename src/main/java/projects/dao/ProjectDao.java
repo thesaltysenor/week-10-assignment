@@ -68,45 +68,35 @@ public class ProjectDao extends DaoBase {
     }private void commitmentTransaction(Connection conn) {
         // TODO: Implement this method
     }
-public List<Project> fetchAllProjects() {
+    public List<Project> fetchAllProjects() {
         String sql = "SELECT * FROM " + PROJECT_TABLE + " ORDER BY project_name";
 
-        try(Connection conn = DbConnection.getConnection()) {
+        try (Connection conn = DbConnection.getConnection()) {
             startTransaction(conn);
 
-            try(PreparedStatement stmt = conn.prepareStatement(sql)) {
-                try(ResultSet rs = stmt.executeQuery()) {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                try (ResultSet rs = stmt.executeQuery()) {
                     List<Project> projects = new LinkedList<>();
 
                     while (rs.next()) {
-                        projects.add(extract(rs, Project.class));
-
-                        /** Alternative approach
-                         * Project project = new Project();
-                         *
-                         * project.setActualHours(rs.getBigDecimal("actual_hours"));
-                         * project.setDifficulty(rs.getObject("difficulty, Integer.class));
-                         * project.setEstimatedHours(rs.getBigDecimal("estimated_hours));
-                         * project.setNotes(rs.getString("notes"));
-                         * project.setProjectID(rs.getObject("project_id", Integer.class));
-                         * project.setProjectName(rs.getString("project_name"));
-                         *
-                         * projects.add(project);
-                         */
+                        Project project = extract(rs, Project.class);
+                        project.getMaterials().addAll(fetchMaterialsForProject(conn, project.getProjectId()));
+                        project.getSteps().addAll(fetchStepsForProject(conn, project.getProjectId()));
+                        project.getCategories().addAll(fetchCategoriesForProject(conn, project.getProjectId()));
+                        projects.add(project);
                     }
+
                     return projects;
                 }
-
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 rollbackTransaction(conn);
                 throw new DbException(e);
             }
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             throw new DbException(e);
         }
     }
+
 public Optional<Project> fetchProjectById(Integer projectId) {
         String sql = "SELECT * FROM " + PROJECT_TABLE + " WHERE project_id = ?";
 
